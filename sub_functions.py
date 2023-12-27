@@ -166,6 +166,10 @@ class Root:
     @staticmethod
     def __load_users_json(path: str):
         out_list: list[types.User] = []
+
+        if not os.path.exists(path):
+            os.mkdir(path=path)
+            
         for file_name in os.listdir(path):
             jpath = os.path.join(path, file_name)
             if os.path.isfile(jpath) and file_name[len(file_name) - 5:len(file_name)] == '.json':
