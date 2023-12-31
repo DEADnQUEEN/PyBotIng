@@ -1,5 +1,11 @@
 from sub_functions import Root
-import telebot
+
+try:
+    import telebot
+except ImportError as e:
+    import os
+    os.system('pip install telebot')
+    import telebot
 
 token = '6925632277:AAE38j8q-lwpkUU_-3UofXlvj1GteC0h5Tk'
 bot = telebot.TeleBot(token)

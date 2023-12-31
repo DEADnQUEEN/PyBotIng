@@ -1,42 +1,67 @@
 import os
 import random
 import string
-import telebot
-from telebot import types
 import json
+
+try:
+    import telebot
+except ImportError as e:
+    os.system('pip install telebot')
+    import telebot
+
+from telebot import types
+
+
+def path_exists(path: str) -> None:
+    if not os.path.exists(path):
+        print(f'dir "{path}" have been added')
+        os.mkdir(path)
+
+
+path_exists('json')
+path_exists('json/users')
+path_exists('json/root')
 
 
 class Root:
     @staticmethod
-    def __key_gen(length: int):
+    def __key_gen(length: int) -> str:
         key = ''
         for i in range(length):
             key += random.choice(string.ascii_letters)
 
+        print('log key - "', key, '"', sep='')
+
         return key
 
-    def __is_root(self, from_user: types.User):
+    def __is_root(self, from_user: types.User) -> bool:
         for i in range(len(self.__root_users)):
             if from_user.id == self.__root_users[i].id:
                 return True
 
         return False
 
-    def root_commands(self, message: types.Message):
+    def root_commands(self, message: types.Message) -> None:
         root = message.text.split(' ', maxsplit=2)
 
+        if len(root) < 2:
+            return
+
         if self.__is_root(message.from_user):
+
             if root[1] not in list(self.__commands.keys()):
                 self.__bot.send_message(
                     message.chat.id,
                     "Unsolved root reference"
                 )
-            else:
-                self.__commands[root[1]][0](message)
-        elif root[1] == 'add' and root[2] == self.__key_log:
+                return
+
+            self.__commands[root[1]][0](message)
+
+        elif root[1] == 'add':
             self.__add_root(message)
 
-    def __add_root(self, message: types.Message):
+    def __add_root(self, message: types.Message) -> None:
         if message.text.split(' ', 2)[2] == self.__key_log:
             if self.__is_root(message.from_user):
                 self.__bot.send_message(
@@ -55,11 +80,11 @@ class Root:
                         f'Added a new root user!\n{message.from_user.full_name}, @{message.from_user.username}'
                     )
 
-    def add_user(self, user: types.User):
+    def add_user(self, user: types.User) -> None:
         self.__users.append(user)
         self.__make_json_user('json/users', user)
 
-    def __send(self, message: types.Message):
+    def __send(self, message: types.Message) -> None:
         """
         /root send id text
         send - command name
@@ -81,7 +106,7 @@ class Root:
                     command[3][1: len(command[3]) - 1]
                 )
 
-    def __stop(self, message: types.Message):
+    def __stop(self, message: types.Message) -> None:
         command = message.text.split(' ')
         if len(command) == 2:
             self.__bot.send_message(
@@ -90,7 +115,7 @@ class Root:
             )
             self.__bot.stop_bot()
 
-    def __help(self, message: types.Message):
+    def __help(self, message: types.Message) -> None:
         command = message.text.split(' ')
         text = ''
         if len(command) == 2:
@@ -109,7 +134,7 @@ class Root:
             f'{text}\nMore information by /root help "command_name"'
         )
 
-    def __echo(self, message: types.Message):
+    def __echo(self, message: types.Message) -> None:
         command = message.text.split(' ', maxsplit=2)
         if command[2].__len__() < 2:
             return
@@ -126,7 +151,7 @@ class Root:
             f'{text}'
         )
 
-    def send_echo(self, message: types.Message):
+    def send_echo(self, message: types.Message) -> None:
         for i in range(len(self.__root_users)):
             self.__bot.send_message(
                 self.__root_users[i].id,
@@ -136,8 +161,12 @@ class Root:
                 f'Message Text:\n"{message.text}"'
             )
 
-    def __add_button(self, message: types.Message):
+    def __add_button(self, message: types.Message) -> None:
         text = message.text.split(' ', maxsplit=2)
+
+        if len(text) != 3:
+            return
+
         words = text[len(text) - 1].split('"')
         if len(words) == 5:
             if words[1] in list(self.buttons.keys()):
@@ -150,13 +179,17 @@ class Root:
                 t
             )
 
-    def __send_root_key(self, message: types.Message):
+    @staticmethod
+    def __save_button(path: str) -> None:
+        pass
+
+    def __send_root_key(self, message: types.Message) -> None:
         self.__bot.send_message(
             message.chat.id,
             f'auth root key - {self.__key_log}\nDo not tell this for everyone'
         )
 
-    def is_user_exist(self, user: types.User):
+    def is_user_exist(self, user: types.User) -> bool:
         for i in range(len(self.__users)):
             if user.id == self.__users[i].id:
                 return True
@@ -164,11 +197,10 @@ class Root:
         return False
 
     @staticmethod
-    def __load_users_json(path: str):
+    def __load_users_json(path: str) -> list[types.User]:
         out_list: list[types.User] = []
 
-        if not os.path.exists(path):
-            os.mkdir(path=path)
+        path_exists(path)
             
         for file_name in os.listdir(path):
             jpath = os.path.join(path, file_name)
@@ -179,7 +211,9 @@ class Root:
         return out_list
 
     @staticmethod
-    def __make_json_user(path: str, user: types.User):
+    def __make_json_user(path: str, user: types.User) -> None:
+        path_exists(path)
+
         with open(f'{path}/{user.username}.json', 'w') as j:
             json.dump(user.to_json(), j)
 
