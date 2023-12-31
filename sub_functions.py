@@ -18,11 +18,6 @@ def path_exists(path: str) -> None:
         os.mkdir(path)
 
 
-path_exists('json')
-path_exists('json/users')
-path_exists('json/root')
-
-
 class Root:
     @staticmethod
     def __key_gen(length: int) -> str:
@@ -56,7 +51,7 @@ class Root:
                 )
                 return
 
-            self.__commands[root[1]][0](message)
+            self.__commands[root[1]][0](self, message)
 
         elif root[1] == 'add':
             self.__add_root(message)
@@ -174,20 +169,51 @@ class Root:
             else:
                 t = 'Текст на кнопке: ' + words[1] + '\nОтветный текст по кнопке: ' + words[3]
                 self.buttons[words[1]] = words[3]
+                self.__save_buttons(self.__buttons_location, words[1], words[3])
+
             self.__bot.send_message(
                 message.chat.id,
                 t
             )
 
-    @staticmethod
-    def __save_button(path: str) -> None:
-        pass
+    def __remove_button(self, message: types.Message) -> None:
+        inline = types.InlineKeyboardMarkup()
+
+        btn_list = list(self.buttons.keys())
+
+        for i in range(len(btn_list)):
+            inline.add(types.InlineKeyboardButton(text=btn_list[i], callback_data=f'btn{btn_list[i]}'))
+
+        self.__bot.send_message(
+            message.chat.id,
+            "a",
+            reply_markup=inline
+        )
 
     def __send_root_key(self, message: types.Message) -> None:
         self.__bot.send_message(
             message.chat.id,
             f'auth root key - {self.__key_log}\nDo not tell this for everyone'
         )
+
+    @staticmethod
+    def __save_buttons(path: str, button_name: str, button_text: str) -> None:
+        path_exists(path)
+        with open(f'{path}\\{button_name}.txt', 'w', encoding='utf-8') as file:
+            file.write(button_text)
+
+    @staticmethod
+    def __load_buttons(path: str) -> dict[str: str]:
+        out_dict: dict[str: str] = {}
+
+        path_exists(path)
+
+        for file in os.listdir(path):
+            if os.path.isfile(f'{path}\\{file}') and file[-4:] == '.txt':
+                with open(f'{path}\\{file}', 'r', encoding='utf-8') as f:
+                    out_dict[file[:-4]] = '\n'.join(f.readlines())
+
+        return out_dict
 
     def is_user_exist(self, user: types.User) -> bool:
         for i in range(len(self.__users)):
@@ -238,6 +264,12 @@ class Root:
             '/root add_button "button" "answer"',
             '/root add_button "button text" "answer for button click"\n'
         ),
+        'remove_button': (
+            __remove_button,
+            '/root remove_button',
+            '/root remove_button"\n'
+            'Send a list of buttons which already exists in bot'
+        ),
         'send_root_key': (
             __send_root_key,
             "/root send_root_key",
@@ -265,9 +297,13 @@ class Root:
     buttons: dict[str: str] = {}
     echo: list[str] = []
 
-    def __init__(self, bot: telebot.TeleBot):
+    def __init__(self, bot: telebot.TeleBot, button_save_path: str = "buttons"):
         self.__key_log = self.__key_gen(10)
         self.__bot = bot
+
+        self.__buttons_location = button_save_path
+
+        self.buttons = self.__load_buttons(self.__buttons_location)
 
         self.__root_users: list[types.User] = self.__load_users_json('json/root')
         self.__users: list[types.User] = self.__load_users_json('json/users')

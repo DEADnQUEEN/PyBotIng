@@ -12,6 +12,22 @@ bot = telebot.TeleBot(token)
 root: Root
 
 
+def check(call: telebot.types.CallbackQuery) -> bool:
+    if call.data[:3] == 'btn':
+        return True
+    return False
+
+
+@bot.callback_query_handler(func=check)
+def parser(call: telebot.types.CallbackQuery):
+    bot.send_message(
+        call.from_user.id,
+        call.data[3:] + ' - removed'
+    )
+
+    root.buttons.pop(call.data[3:])
+
+
 @bot.message_handler(commands=['start'])
 def start(message: telebot.types.Message):
     if not root.is_user_exist(message.from_user):
