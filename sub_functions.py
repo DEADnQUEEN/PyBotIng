@@ -1,6 +1,7 @@
 import os
 import random
 import string
+
 import json
 
 try:
@@ -141,6 +142,11 @@ class Root:
             text = f'Echo markup added to "{echo}"'
             self.echo.append(echo)
 
+            path_exists(self.__echo_location)
+
+            with open(f'{self.__echo_location}\\{len(os.listdir(self.__echo_location))}.txt', 'w') as file:
+                file.write(echo)
+
         self.__bot.send_message(
             message.chat.id,
             f'{text}'
@@ -186,7 +192,19 @@ class Root:
 
         self.__bot.send_message(
             message.chat.id,
-            "a",
+            "List of Buttons",
+            reply_markup=inline
+        )
+
+    def __remove_echo(self, message: types.Message) -> None:
+        inline = types.InlineKeyboardMarkup()
+
+        for i in range(len(self.echo)):
+            inline.add(types.InlineKeyboardButton(text=self.echo[i], callback_data=f'echo{self.echo[i]}'))
+
+        self.__bot.send_message(
+            message.chat.id,
+            "List of Echo",
             reply_markup=inline
         )
 
@@ -215,6 +233,19 @@ class Root:
 
         return out_dict
 
+    @staticmethod
+    def __load_echo(path: str) -> list[str]:
+        out_echo: list[str] = []
+
+        path_exists(path)
+
+        for file in os.listdir(path):
+            if os.path.isfile(f'{path}\\{file}') and file[-4:] == '.txt':
+                with open(f'{path}\\{file}', 'r', encoding='utf-8') as f:
+                    out_echo.append('\n'.join(f.readlines()))
+
+        return out_echo
+
     def is_user_exist(self, user: types.User) -> bool:
         for i in range(len(self.__users)):
             if user.id == self.__users[i].id:
@@ -227,7 +258,7 @@ class Root:
         out_list: list[types.User] = []
 
         path_exists(path)
-            
+
         for file_name in os.listdir(path):
             jpath = os.path.join(path, file_name)
             if os.path.isfile(jpath) and file_name[len(file_name) - 5:len(file_name)] == '.json':
@@ -242,6 +273,27 @@ class Root:
 
         with open(f'{path}/{user.username}.json', 'w') as j:
             json.dump(user.to_json(), j)
+
+    def checker(self, call: types.CallbackQuery) -> bool:
+        calls: list = list(self.__calls.keys())
+        for i in range(len(calls)):
+            if call.data[:len(calls[i])] == calls[i]:
+                markup = self.__calls[calls[i]](call.data[len(calls[i]):])
+                self.__bot.send_message(
+                    call.message.chat.id,
+                    f'"{call.data[len(calls[i]):]}"' + " - removed"
+                )
+
+                self.__bot.edit_message_text(
+                    chat_id=call.message.chat.id,
+                    message_id=call.message.message_id,
+                    text=call.message.text,
+                    reply_markup=markup
+                )
+
+                return True
+
+        return False
 
     last_message: dict[int, str] = {}
 
@@ -270,6 +322,12 @@ class Root:
             '/root remove_button"\n'
             'Send a list of buttons which already exists in bot'
         ),
+        'remove_echo': (
+            __remove_echo,
+            '/root remove_echo',
+            '/root remove_echo"\n'
+            "Send a list of echo's which already exists in bot"
+        ),
         'send_root_key': (
             __send_root_key,
             "/root send_root_key",
@@ -295,21 +353,61 @@ class Root:
     }
 
     buttons: dict[str: str] = {}
-    echo: list[str] = []
 
-    def __init__(self, bot: telebot.TeleBot, button_save_path: str = "buttons"):
+    def __init__(self, bot: telebot.TeleBot, button_save_path: str = "buttons", echo_save_path: str = "echo"):
         self.__key_log = self.__key_gen(10)
         self.__bot = bot
 
         self.__buttons_location = button_save_path
+        self.__echo_location = echo_save_path
 
-        self.buttons = self.__load_buttons(self.__buttons_location)
+        self.buttons: dict[str: str] = dict(self.__load_buttons(self.__buttons_location)).copy()
+        self.echo: list[str] = self.__load_echo(self.__echo_location)
 
         self.__root_users: list[types.User] = self.__load_users_json('json/root')
         self.__users: list[types.User] = self.__load_users_json('json/users')
 
         for i in range(len(self.__users)):
             self.last_message[self.__users[i].id] = ""
+
+        def __echo(value) -> types.InlineKeyboardMarkup:
+            lst = self.echo
+
+            os.remove(f'{echo_save_path}\\{self.echo.index(value)}.txt')
+            for i in range(self.echo.index(value), len(os.listdir(echo_save_path))):
+                os.rename(f'{echo_save_path}\\{i + 1}.txt', f'{echo_save_path}\\{i}.txt')
+
+            lst.remove(value)
+            self.echo = lst
+
+            inline = types.InlineKeyboardMarkup()
+
+            for i in range(len(self.echo)):
+                inline.add(types.InlineKeyboardButton(text=self.echo[i], callback_data=f'echo{self.echo[i]}'))
+
+            return inline
+
+        def __btn(value) -> types.InlineKeyboardMarkup:
+            d: list = list(self.buttons.keys())
+            out_d: dict[str: str] = {}
+            d.remove(value)
+            for i in range(len(d)):
+                out_d[d[i]] = self.buttons[d[i]]
+
+            self.buttons = out_d
+            inline = types.InlineKeyboardMarkup()
+
+            btn_list = list(self.buttons.keys())
+
+            for i in range(len(btn_list)):
+                inline.add(types.InlineKeyboardButton(text=btn_list[i], callback_data=f'btn{btn_list[i]}'))
+
+            return inline
+
+        self.__calls: dict[str: types.InlineKeyboardMarkup] = {
+            "btn": lambda value: __btn(value),
+            "echo": lambda value: __echo(value),
+        }
 
         for i in range(len(self.__root_users)):
             self.last_message[self.__root_users[i].id] = ""
@@ -318,3 +416,6 @@ class Root:
                 'bot is online',
                 reply_markup=types.ReplyKeyboardRemove()
             )
+
+        print(self.echo)
+        print(self.buttons)
