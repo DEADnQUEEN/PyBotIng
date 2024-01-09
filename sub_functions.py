@@ -127,7 +127,10 @@ class Root:
 
         self.__bot.send_message(
             message.chat.id,
-            f'{text}\nMore information by /root help "command_name"'
+            f'{text}\n'
+            f'More information by /root help "command_name"\n'
+            f'Or you can also use /help\n'
+            f'All command now support to use by command name without root prefix <3'
         )
 
     def __echo(self, message: types.Message) -> None:
@@ -297,6 +300,10 @@ class Root:
 
     last_message: dict[int, str] = {}
 
+    @property
+    def get(self) -> list[str]:
+        return list(self.__commands.keys())
+
     __commands: dict[str: tuple] = {
         'add': (
             __add_root,
@@ -391,6 +398,7 @@ class Root:
             d: list = list(self.buttons.keys())
             out_d: dict[str: str] = {}
             d.remove(value)
+
             for i in range(len(d)):
                 out_d[d[i]] = self.buttons[d[i]]
 
@@ -416,6 +424,3 @@ class Root:
                 'bot is online',
                 reply_markup=types.ReplyKeyboardRemove()
             )
-
-        print(self.echo)
-        print(self.buttons)

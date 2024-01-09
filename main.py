@@ -7,14 +7,24 @@ except ImportError as e:
     os.system('pip install telebot')
     import telebot
 
+if __name__ != '__main__':
+    raise Exception("Must be Main func and can't be import somewhere")
+
+
 token = '6925632277:AAE38j8q-lwpkUU_-3UofXlvj1GteC0h5Tk'
 bot = telebot.TeleBot(token)
-root: Root
+root: Root = Root(bot)
 
 
 @bot.callback_query_handler(func=lambda call: root.checker(call))
 def parser(call: telebot.types.CallbackQuery):
     pass
+
+
+@bot.message_handler(commands=root.get)
+def msg(message: telebot.types.Message):
+    message.text = '/root ' + message.text[1:]
+    start(message)
 
 
 @bot.message_handler(commands=['start'])
@@ -73,6 +83,4 @@ def texter(message: telebot.types.Message):
     root.last_message[message.from_user.id] = message.text
 
 
-if __name__ == '__main__':
-    root = Root(bot)
-    bot.polling(none_stop=True, timeout=200)
+bot.polling(none_stop=True, timeout=200)
