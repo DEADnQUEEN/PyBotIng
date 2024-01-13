@@ -14,12 +14,18 @@ from telebot import types
 
 
 def path_exists(path: str) -> None:
+<<<<<<< HEAD
     sub_path = path.split('\\')
     for i in range(len(sub_path)):
         pth = '\\'.join(sub_path[:i + 1])
         if not os.path.exists(pth):
             os.mkdir(pth)
             print(f'dir "{pth}" have been added')
+=======
+    if not os.path.exists(path):
+        os.makedirs(path)
+        print(f'{path} - added')
+>>>>>>> TestBranch
 
 
 class Root:
@@ -71,7 +77,11 @@ class Root:
             else:
                 self.__root_users.append(message.from_user)
 
+<<<<<<< HEAD
                 self.__make_json_user('json\\root', message.from_user)
+=======
+                self.__make_json_user(f'json{self.__sub}root', message.from_user)
+>>>>>>> TestBranch
 
                 for i in range(len(self.__root_users)):
                     self.__bot.send_message(
@@ -81,7 +91,11 @@ class Root:
 
     def add_user(self, user: types.User) -> None:
         self.__users.append(user)
+<<<<<<< HEAD
         self.__make_json_user('json\\users', user)
+=======
+        self.__make_json_user(f'json{self.__sub}users', user)
+>>>>>>> TestBranch
 
     def __send(self, message: types.Message) -> None:
         """
@@ -150,7 +164,7 @@ class Root:
 
             path_exists(self.__echo_location)
 
-            with open(f'{self.__echo_location}\\{len(os.listdir(self.__echo_location))}.txt', 'w') as file:
+            with open(f'{self.__echo_location}{self.__sub}{len(os.listdir(self.__echo_location))}.txt', 'w') as file:
                 file.write(echo)
 
         self.__bot.send_message(
@@ -220,34 +234,31 @@ class Root:
             f'auth root key - {self.__key_log}\nDo not tell this for everyone'
         )
 
-    @staticmethod
-    def __save_buttons(path: str, button_name: str, button_text: str) -> None:
+    def __save_buttons(self, path: str, button_name: str, button_text: str) -> None:
         path_exists(path)
-        with open(f'{path}\\{button_name}.txt', 'w', encoding='utf-8') as file:
+        with open(f'{path}{self.__sub}{button_name}.txt', 'w', encoding='utf-8') as file:
             file.write(button_text)
 
-    @staticmethod
-    def __load_buttons(path: str) -> dict[str: str]:
+    def __load_buttons(self, path: str) -> dict[str: str]:
         out_dict: dict[str: str] = {}
 
         path_exists(path)
 
         for file in os.listdir(path):
-            if os.path.isfile(f'{path}\\{file}') and file[-4:] == '.txt':
-                with open(f'{path}\\{file}', 'r', encoding='utf-8') as f:
+            if os.path.isfile(f'{path}{self.__sub}{file}') and file[-4:] == '.txt':
+                with open(f'{path}{self.__sub}{file}', 'r', encoding='utf-8') as f:
                     out_dict[file[:-4]] = '\n'.join(f.readlines())
 
         return out_dict
 
-    @staticmethod
-    def __load_echo(path: str) -> list[str]:
+    def __load_echo(self, path: str) -> list[str]:
         out_echo: list[str] = []
 
         path_exists(path)
 
         for file in os.listdir(path):
-            if os.path.isfile(f'{path}\\{file}') and file[-4:] == '.txt':
-                with open(f'{path}\\{file}', 'r', encoding='utf-8') as f:
+            if os.path.isfile(f'{path}{self.__sub}{file}') and file[-4:] == '.txt':
+                with open(f'{path}{self.__sub}{file}', 'r', encoding='utf-8') as f:
                     out_echo.append('\n'.join(f.readlines()))
 
         return out_echo
@@ -273,11 +284,14 @@ class Root:
 
         return out_list
 
-    @staticmethod
-    def __make_json_user(path: str, user: types.User) -> None:
+    def __make_json_user(self, path: str, user: types.User) -> None:
         path_exists(path)
 
+<<<<<<< HEAD
         with open(f'{path}\\{user.username}.json', 'w') as j:
+=======
+        with open(f'{path}{self.__sub}{user.username}.json', 'w') as j:
+>>>>>>> TestBranch
             json.dump(user.to_json(), j)
 
     def checker(self, call: types.CallbackQuery) -> bool:
@@ -381,15 +395,21 @@ class Root:
     def __init__(self, bot: telebot.TeleBot, button_save_path: str = "buttons", echo_save_path: str = "echo"):
         self.__key_log = self.__key_gen(10)
         self.__bot = bot
-
         self.__buttons_location = button_save_path
         self.__echo_location = echo_save_path
+
+        self.__sub: str = '/'
 
         self.buttons: dict[str: str] = dict(self.__load_buttons(self.__buttons_location)).copy()
         self.echo: list[str] = self.__load_echo(self.__echo_location)
 
+<<<<<<< HEAD
         self.__root_users: list[types.User] = self.__load_users_json('json\\root')
         self.__users: list[types.User] = self.__load_users_json('json\\users')
+=======
+        self.__root_users: list[types.User] = self.__load_users_json(f'json{self.__sub}root')
+        self.__users: list[types.User] = self.__load_users_json(f'json{self.__sub}users')
+>>>>>>> TestBranch
 
         for i in range(len(self.__users)):
             self.last_message[self.__users[i].id] = ""
@@ -397,9 +417,9 @@ class Root:
         def __echo(value) -> types.InlineKeyboardMarkup:
             lst = self.echo
 
-            os.remove(f'{echo_save_path}\\{self.echo.index(value)}.txt')
+            os.remove(f'{echo_save_path}{self.__sub}{self.echo.index(value)}.txt')
             for i in range(self.echo.index(value), len(os.listdir(echo_save_path))):
-                os.rename(f'{echo_save_path}\\{i + 1}.txt', f'{echo_save_path}\\{i}.txt')
+                os.rename(f'{echo_save_path}{self.__sub}{i + 1}.txt', f'{echo_save_path}{self.__sub}{i}.txt')
 
             lst.remove(value)
             self.echo = lst
