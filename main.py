@@ -2,7 +2,7 @@ from sub_functions import Root
 
 try:
     import telebot
-except ImportError as e:
+except ImportError:
     import os
     os.system('pip install telebot')
     import telebot
@@ -69,8 +69,8 @@ def texter(message: telebot.types.Message):
     if message.text in list(root.buttons.keys()):
         text = root.buttons[message.text] + f'\n'
     elif root.last_message[message.from_user.id] in root.echo:
-        with open("echo_answer.txt", 'r', encoding='utf8') as e:
-            lines = e.readlines()
+        with open("echo_answer.txt", 'r', encoding='utf8') as ans:
+            lines = ans.readlines()
             text = str.join('\n', lines)
         root.send_echo(message)
 
