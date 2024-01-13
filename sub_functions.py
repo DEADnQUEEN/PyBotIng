@@ -14,9 +14,12 @@ from telebot import types
 
 
 def path_exists(path: str) -> None:
-    if not os.path.exists(path):
-        print(f'dir "{path}" have been added')
-        os.mkdir(path)
+    sub_path = path.split('/')
+    for i in range(len(sub_path)):
+        pth = '\\'.join(sub_path[:i + 1])
+        if not os.path.exists(pth):
+            os.mkdir(pth)
+            print(f'dir "{pth}" have been added')
 
 
 class Root:
