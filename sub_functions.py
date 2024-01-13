@@ -14,9 +14,12 @@ from telebot import types
 
 
 def path_exists(path: str) -> None:
-    if not os.path.exists(path):
-        print(f'dir "{path}" have been added')
-        os.mkdir(path)
+    sub_path = path.split('\\')
+    for i in range(len(sub_path)):
+        pth = '\\'.join(sub_path[:i + 1])
+        if not os.path.exists(pth):
+            os.mkdir(pth)
+            print(f'dir "{pth}" have been added')
 
 
 class Root:
@@ -68,7 +71,7 @@ class Root:
             else:
                 self.__root_users.append(message.from_user)
 
-                self.__make_json_user('json/root', message.from_user)
+                self.__make_json_user('json\\root', message.from_user)
 
                 for i in range(len(self.__root_users)):
                     self.__bot.send_message(
@@ -78,7 +81,7 @@ class Root:
 
     def add_user(self, user: types.User) -> None:
         self.__users.append(user)
-        self.__make_json_user('json/users', user)
+        self.__make_json_user('json\\users', user)
 
     def __send(self, message: types.Message) -> None:
         """
@@ -274,7 +277,7 @@ class Root:
     def __make_json_user(path: str, user: types.User) -> None:
         path_exists(path)
 
-        with open(f'{path}/{user.username}.json', 'w') as j:
+        with open(f'{path}\\{user.username}.json', 'w') as j:
             json.dump(user.to_json(), j)
 
     def checker(self, call: types.CallbackQuery) -> bool:
@@ -385,8 +388,8 @@ class Root:
         self.buttons: dict[str: str] = dict(self.__load_buttons(self.__buttons_location)).copy()
         self.echo: list[str] = self.__load_echo(self.__echo_location)
 
-        self.__root_users: list[types.User] = self.__load_users_json('json/root')
-        self.__users: list[types.User] = self.__load_users_json('json/users')
+        self.__root_users: list[types.User] = self.__load_users_json('json\\root')
+        self.__users: list[types.User] = self.__load_users_json('json\\users')
 
         for i in range(len(self.__users)):
             self.last_message[self.__users[i].id] = ""
