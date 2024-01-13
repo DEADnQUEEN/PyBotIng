@@ -14,18 +14,9 @@ from telebot import types
 
 
 def path_exists(path: str) -> None:
-<<<<<<< HEAD
-    sub_path = path.split('\\')
-    for i in range(len(sub_path)):
-        pth = '\\'.join(sub_path[:i + 1])
-        if not os.path.exists(pth):
-            os.mkdir(pth)
-            print(f'dir "{pth}" have been added')
-=======
     if not os.path.exists(path):
         os.makedirs(path)
         print(f'{path} - added')
->>>>>>> TestBranch
 
 
 class Root:
@@ -77,11 +68,7 @@ class Root:
             else:
                 self.__root_users.append(message.from_user)
 
-<<<<<<< HEAD
-                self.__make_json_user('json\\root', message.from_user)
-=======
                 self.__make_json_user(f'json{self.__sub}root', message.from_user)
->>>>>>> TestBranch
 
                 for i in range(len(self.__root_users)):
                     self.__bot.send_message(
@@ -91,11 +78,7 @@ class Root:
 
     def add_user(self, user: types.User) -> None:
         self.__users.append(user)
-<<<<<<< HEAD
-        self.__make_json_user('json\\users', user)
-=======
         self.__make_json_user(f'json{self.__sub}users', user)
->>>>>>> TestBranch
 
     def __send(self, message: types.Message) -> None:
         """
@@ -287,11 +270,7 @@ class Root:
     def __make_json_user(self, path: str, user: types.User) -> None:
         path_exists(path)
 
-<<<<<<< HEAD
-        with open(f'{path}\\{user.username}.json', 'w') as j:
-=======
         with open(f'{path}{self.__sub}{user.username}.json', 'w') as j:
->>>>>>> TestBranch
             json.dump(user.to_json(), j)
 
     def checker(self, call: types.CallbackQuery) -> bool:
@@ -403,13 +382,8 @@ class Root:
         self.buttons: dict[str: str] = dict(self.__load_buttons(self.__buttons_location)).copy()
         self.echo: list[str] = self.__load_echo(self.__echo_location)
 
-<<<<<<< HEAD
-        self.__root_users: list[types.User] = self.__load_users_json('json\\root')
-        self.__users: list[types.User] = self.__load_users_json('json\\users')
-=======
         self.__root_users: list[types.User] = self.__load_users_json(f'json{self.__sub}root')
         self.__users: list[types.User] = self.__load_users_json(f'json{self.__sub}users')
->>>>>>> TestBranch
 
         for i in range(len(self.__users)):
             self.last_message[self.__users[i].id] = ""
