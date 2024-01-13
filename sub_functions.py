@@ -14,7 +14,7 @@ from telebot import types
 
 
 def path_exists(path: str) -> None:
-    for sub_path in list(path.split('\\'))
+    for sub_path in list(path.split('\\')):
         path_exists(sub_path)
 
     if not os.path.exists(path):
